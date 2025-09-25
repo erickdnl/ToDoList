@@ -1,7 +1,7 @@
 package com.example.todolist.controllers;
 
 import com.example.todolist.entities.Tarefa;
-import com.example.todolist.repositories.TarefaRepository;
+import com.example.todolist.services.TarefaService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -11,49 +11,42 @@ import java.util.List;
 @RequestMapping("/tarefas")
 public class TarefaController {
 
-    private final TarefaRepository tarefaRepository;
+    private final TarefaService service;
 
-    public TarefaController(TarefaRepository tarefaRepository){
-        this.tarefaRepository = tarefaRepository;
+    public TarefaController(TarefaService service){
+        this.service = service;
     }
 
-    // GET /tarefas -> lista todas as tarefas
+    // Listar tarefas
     @GetMapping
-    public List<Tarefa> listarTarefas(){
-        return tarefaRepository.findAll();
+    public ResponseEntity<List<Tarefa>> listarTodas(){
+        return ResponseEntity.ok(service.listarTodas());
     }
 
-    // GET /tarefas/{id} -> retorna uma tarefa pelo id
+    // Buscar por ID
     @GetMapping("/{id}")
-    public ResponseEntity<Tarefa> buscarTarefa(@PathVariable Long id){
-        return tarefaRepository.findById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Tarefa> buscarPorId(@PathVariable Long id){
+        return ResponseEntity.ok(service.buscarPorId(id));
     }
 
-    // POST /tarefas -> cria uma nova tarefa
+    // Criar tarefa
     @PostMapping
-    public Tarefa criarTarefa(@RequestBody Tarefa tarefa){
-        return tarefaRepository.save(tarefa);
+    public ResponseEntity<Tarefa> criar(@RequestBody Tarefa tarefa){
+        Tarefa nova = service.criar(tarefa);
+        return ResponseEntity.ok(nova);
     }
 
-    // PUT /tarefas/{id} -> atualiza uma tarefa
+    // Atualizar tarefa
     @PutMapping("/{id}")
-    public ResponseEntity<Tarefa> atualizarTarefa(@PathVariable Long id, @RequestBody Tarefa tarefaAtualizada){
-        return tarefaRepository.findById(id).map(tarefa -> {
-            tarefa.setTitulo(tarefaAtualizada.getTitulo());
-            tarefa.setDescricao(tarefaAtualizada.getDescricao());
-            tarefa.setStatus(tarefaAtualizada.getStatus());
-            tarefaRepository.save(tarefa);
-            return ResponseEntity.ok(tarefa);
-        }).orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Tarefa> atualizar(@PathVariable Long id, @RequestBody Tarefa tarefa){
+        Tarefa atualizada = service.atualizar(id, tarefa);
+        return ResponseEntity.ok(atualizada);
     }
 
-    // DELETE /tarefas/{id} -> remove uma tarefa
+    // Deletar por ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deletarTarefa(@PathVariable Long id){
-        if (tarefaRepository.existsById(id)) {
-            tarefaRepository.deleteById(id);
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> deletar(@PathVariable Long id){
+        service.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }
